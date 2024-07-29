@@ -3,7 +3,8 @@ let router = new Router();
 
 import {
     createUser,
-    verifyUser
+    verifyUser,
+    loginUser
 } from '../controllers/user.js';
 
 import authenticate from '../middlewares/authenticate.js';
@@ -13,5 +14,8 @@ router.route('/signup')
 
 router.route('/verification')
     .post(verifyUser);
+
+router.route('/login')
+    .post(loginUser);
 
 export default router;

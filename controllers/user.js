@@ -134,7 +134,62 @@ async function verifyUser(req, res) {
     });
 };
 
+async function loginUser(req, res) {
+    const { username, password } = req.body;
+    let errors = new Object();
+
+    if (!username || !password) {
+        if (!username) {
+            errors.username = 'Username is required';
+        };
+
+        if (!password) {
+            errors.password = 'Password is required';
+        };
+
+        return res.status(400).json({
+            success: false,
+            errors
+        });
+    };
+
+    const user = await User.findOne({ username });
+
+    if (!user) {
+        return res.status(400).render("login", {
+            values: req.body,
+            errors: { username: "Username is incorrect" }
+        });
+    };
+
+    if (!user.verification.status) {
+        return res.status(400).json({
+            success: false,
+            message: 'UserNotVerified'
+        });
+    };
+
+    if (await bcrypt.compare(password, user.password)) {
+        const token = await loginToken(user._id);
+
+        res.cookie("token", token, {
+            httpOnly: true
+        });
+
+        res.status(200).json({
+            success: true
+        });
+
+    } else {
+        return res.status(400).json({
+            success: false,
+            message: 'Password is incorrect'
+        });
+    };
+};
+
 export {
     createUser,
-    verifyUser
+    verifyUser,
+    loginUser
 };
