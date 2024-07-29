@@ -29,3 +29,6 @@ app.listen(port, () => {
 import connection  from './database/connection.js';
 connection();
 
+import userRoute from './routes/user.js';
+
+app.use('/api/user', userRoute)
