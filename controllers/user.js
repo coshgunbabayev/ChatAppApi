@@ -1,3 +1,4 @@
+import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import validator from 'validator';
 
@@ -170,6 +171,88 @@ async function resetPasswordEmail(req, res) {
     const token = resetPasswordToken(user._id);
 
     await sendEmailForResetPassword(user.email, token);
+
+    res.status(200).json({
+        success: true
+    });
+};
+
+async function resetPasswordPassword(req, res) {
+    const { token, password, repeatPassword } = req.body;
+    let errors = new Object();
+
+    if (!token) {
+        return res.status(400).json({
+            success: false,
+            message: 'TokenError'
+        });
+    };
+
+    let decoded;
+    try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET_RESET_PASSWORD);
+    } catch (err) {
+        return res.status(400).json({
+            success: false,
+            message: 'TokenError'
+        });
+    };
+
+    let user;
+    try {
+        user = await User.findById(decoded.userId);
+    } catch (err) {
+        return res.status(400).json({
+            success: false,
+            message: 'TokenError'
+        });
+    };
+
+    if (!user) {
+        return res.status(400).json({
+            success: false,
+            message: 'TokenError'
+        });
+    };
+
+    if (!password || !repeatPassword) {
+        if (!password) {
+            errors.password = 'password is required';
+        };
+
+        if (!repeatPassword) {
+            errors.repeatPassword = 'repeat password is required';
+        };
+
+        return res.status(400).json({
+            success: false,
+            errors
+        });
+    };
+
+    if (password !== repeatPassword) {
+        errors.repeatPassword = 'passwords do not match';
+        return res.status(400).json({
+            success: false,
+            errors
+        });
+    };
+
+    if (password.length < 8) {
+        errors.password = 'password is not a valid  in length, at least 8 characters';
+        return res.status(400).json({
+            success: false,
+            errors
+        });
+    };
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({
+        success: true
+    });
 };
 
 async function loginUser(req, res) {
