@@ -1,9 +1,11 @@
 import bcrypt from 'bcryptjs';
+import validator from 'validator';
 
 import User from '../models/userModel.js';
 
 import {
     verificationToken,
+    resetPasswordToken,
     loginToken
 } from '../token/create.js';
 
@@ -11,7 +13,10 @@ import {
     createCode
 } from '../tools/random.js';
 
-import { sendEmailForVerificationCode } from '../smtp/email.js';
+import {
+    sendEmailForVerificationCode,
+    sendEmailForResetPassword
+} from '../smtp/email.js';
 
 async function createUser(req, res) {
     try {
@@ -134,6 +139,39 @@ async function verifyUser(req, res) {
     });
 };
 
+async function resetPasswordEmail(req, res) {
+    const { email } = req.body;
+    let errors = new Object();
+
+    if (!email) {
+        errors.email = 'email is required';
+        return res.status(400).json({
+            success: false,
+            errors
+        });
+    };
+
+    if (!validator.isEmail(email)) {
+        errors.email = 'Invalid email format';
+        return res.status(400).json({
+            success: false,
+            errors
+        });
+    };
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        return res.status(200).json({
+            success: true
+        });
+    };
+
+    const token = resetPasswordToken(user._id);
+
+    await sendEmailForResetPassword(user.email, token);
+};
+
 async function loginUser(req, res) {
     const { username, password } = req.body;
     let errors = new Object();
@@ -191,5 +229,7 @@ async function loginUser(req, res) {
 export {
     createUser,
     verifyUser,
+    resetPasswordEmail,
+    resetPasswordPassword,
     loginUser
 };

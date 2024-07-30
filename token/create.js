@@ -4,7 +4,13 @@ function verificationToken (id) {
     return jwt.sign({ userId }, process.env.JWT_SECRET_VERIFICATION, {
         expiresIn: "1h"
     });
-}
+};
+
+function resetPasswordToken(id) {
+    return jwt.sign({ userId }, process.env.JWT_SECRET_RESET_PASSWORD, {
+        expiresIn: "15m"
+    });
+};
 
 function loginToken(id) {
     return jwt.sign({ userId }, process.env.JWT_SECRET_LOGIN, {
@@ -14,5 +20,6 @@ function loginToken(id) {
 
 export {
     verificationToken,
+    resetPasswordToken,
     loginToken
 };
