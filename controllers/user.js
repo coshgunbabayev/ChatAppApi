@@ -284,9 +284,17 @@ async function loginUser(req, res) {
     };
 
     if (!user.verification.status) {
+        const newCode = createCode(6);
+        user.verification.code = newCode;
+        await user.save();
+
+        await sendEmailForVerificationCode(user.email, newCode);
+        const token = verificationToken(user._id);
+        
         return res.status(400).json({
             success: false,
-            message: 'UserNotVerified'
+            message: 'UserNotVerified',
+            token
         });
     };
 

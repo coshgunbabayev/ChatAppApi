@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 
 function verificationToken (id) {
     return jwt.sign({ userId }, process.env.JWT_SECRET_VERIFICATION, {
-        expiresIn: "1h"
+        expiresIn: "15m"
     });
 };
 

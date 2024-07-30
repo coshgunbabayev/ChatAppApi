@@ -7,7 +7,7 @@ function sendEmailForVerificationCode(to, code) {
     let sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
     sendSmtpEmail.subject = "{{params.subject}}";
     sendSmtpEmail.htmlContent = `<html><body><h1>Your verification code is {{params.parameter}}</h1></body></html>`;
-    sendSmtpEmail.sender = { "name": process.env.BREVO_NAME + process.env.BREVO_SURNAME, "email": process.env.BREVO_EMAIL };
+    sendSmtpEmail.sender = { "name": process.env.BREVO_NAME + ' ' + process.env.BREVO_SURNAME, "email": process.env.BREVO_EMAIL };
     sendSmtpEmail.to = [{ "email": to }];
     sendSmtpEmail.headers = { "Some-Custom-Name": "unique-id-1234" };
     sendSmtpEmail.params = { "parameter": code, "subject": "Verification code for B" };
