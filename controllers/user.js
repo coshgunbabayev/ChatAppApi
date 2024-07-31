@@ -72,76 +72,75 @@ async function createUser(req, res) {
 };
 
 async function verifyUser(req, res) {
-    console.log(req.body);
-    // const { token, code } = req.body;
-    // let errors = new Object();
+    const { token, code } = req.body;
+    let errors = new Object();
 
-    // if (!code) {
-    //     errors.code = 'Verification code is required';
-    //     return res.status(400).json({
-    //         success: false,
-    //         errors
-    //     });
-    // };
+    if (!token) {
+        return res.status(400).json({
+            success: false,
+            message: 'TokenError'
+        });
+    };
 
-    // if (!token) {
-    //     return res.status(400).json({
-    //         success: false,
-    //         message: 'TokenError'
-    //     });
-    // };
+    let decoded;
+    try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET_VERIFICATION);
+    } catch (err) {
+        return res.status(400).json({
+            success: false,
+            message: 'TokenError'
+        });
+    };
 
-    // let decoded;
-    // try {
-    //     decoded = jwt.verify(token, process.env.JWT_SECRET_VERIFICATION);
-    // } catch (err) {
-    //     return res.status(400).json({
-    //         success: false,
-    //         message: 'TokenError'
-    //     });
-    // };
+    let user;
+    try {
+        user = await User.findById(decoded.userId);
+    } catch (err) {
+        return res.status(400).json({
+            success: false,
+            message: 'TokenError'
+        });
+    };
 
-    // let user;
-    // try {
-    //     user = await User.findById(decoded.userId);
-    // } catch (err) {
-    //     return res.status(400).json({
-    //         success: false,
-    //         message: 'TokenError'
-    //     });
-    // };
+    if (!user) {
+        return res.status(400).json({
+            success: false,
+            message: 'TokenError'
+        });
+    };
 
-    // if (!user) {
-    //     return res.status(400).json({
-    //         success: false,
-    //         message: 'TokenError'
-    //     });
-    // };
+    if (user.verification.status) {
+        return res.status(400).json({
+            success: false,
+            message: 'UserVerified'
+        });
+    };
 
-    // if (user.verification.status) {
-    //     return res.status(400).json({
-    //         success: false,
-    //         message: 'UserVerified'
-    //     });
-    // };
+    if (!code) {
+        errors.code = 'verification code is required';
+        return res.status(400).json({
+            success: false,
+            errors
+        });
+    };
 
-    // if (user.verification.code !== code) {
-    //     const newCode = createCode(6)
-    //     user.verification.code = newCode;
-    //     await user.save();
+    if (user.verification.code !== code) {
+        const newCode = createCode(6)
+        user.verification.code = newCode;
+        await user.save();
 
-    //     await sendEmailForVerificationCode(user.email, newCode);
+        await sendEmailForVerificationCode(user.email, newCode);
 
-    //     errors.code = 'Verification code is incorrect, we send a new verification code';
-    //     return res.status(400).json({
-    //         success: false,
-    //         errors
-    //     });
-    // };
+        errors.code = 'verification code is incorrect, we send a new verification code';
+        return res.status(400).json({
+            success: false,
+            errors
+        });
+    };
 
-    // user.verification.status = true;
-    // user.verification.code = '';
-    // await user.save();
+    user.verification.status = true;
+    user.verification.code = '';
+    await user.save();
 
     res.status(200).json({
         success: true
