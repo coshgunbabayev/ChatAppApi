@@ -40,8 +40,7 @@ const userSchema = new Schema({
 
     password: {
         type: String,
-        required: [true, 'password area is required'],
-        minLength: [8, 'password is not a valid  in length, at least 8 characters'],
+        required: [true, 'password area is required']
     },
 
     verification: {
@@ -75,15 +74,6 @@ const userSchema = new Schema({
     {
         timestamps: true
     });
-
-userSchema.pre("save", function (next) {
-    const user = this;
-    bcrypt.hash(user.password, 10, (err, hash) => {
-        if (err) return console.log(err.message);
-        user.password = hash;
-        next();
-    });
-});
 
 const User = mongoose.model("User", userSchema);
 

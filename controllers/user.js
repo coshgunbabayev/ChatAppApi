@@ -22,12 +22,18 @@ import {
 async function createUser(req, res) {
     try {
         const { name, surname, username, email, password } = req.body;
+
+        let hashedPassword = '';
+        if (password) {
+            hashedPassword = await bcrypt.hash(password, 10);
+        };
+
         const user = await User.create({
             name,
             surname,
             username,
             email,
-            password
+            password: hashedPassword
         });
 
         await sendEmailForVerificationCode(user.email, user.verification.code);
@@ -39,6 +45,7 @@ async function createUser(req, res) {
             token
         });
     } catch (err) {
+        console.log(err)
         let errors = new Object();
 
         if (err.name === "ValidationError") {
@@ -277,8 +284,8 @@ async function loginUser(req, res) {
     const user = await User.findOne({ username });
 
     if (!user) {
-        return res.status(400).render("login", {
-            values: req.body,
+        return res.status(400).json({
+            success: false,
             errors: { username: "Username is incorrect" }
         });
     };
@@ -297,6 +304,10 @@ async function loginUser(req, res) {
             token
         });
     };
+
+    console.log(user.password)
+    
+    console.log(await bcrypt.compare(password, user.password))
 
     if (await bcrypt.compare(password, user.password)) {
         const token = await loginToken(user._id);
